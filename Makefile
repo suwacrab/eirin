@@ -1,5 +1,5 @@
 # compiler
-CC := gcc
+CC := g++
 # include paths
 INC := -I. -I./src
 # libs
@@ -9,11 +9,11 @@ OBJS := src/main.o src/eirin.o
 NAME := build/gltest
 
 # main
-%.o: %.c
-	$(CC) -c -o $@ $<
+%.o: %.c %.cpp
+	$(CC) -c -o $@ $< $(INC)
 
 $(NAME): $(OBJS)
-	$(CC) -o $@ $^ $(LIBS)
+	$(CC) -o $@ $^ $(LIBS) -g
 
 clean:
 	rm $(OBJS)

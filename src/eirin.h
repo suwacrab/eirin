@@ -6,10 +6,12 @@
 #define EIRIN_H
 
 // rgb inlines & defs
-INLINE u16 RGB5A1(u32 r,u32 g,u32 b) { return r | (g<<5) | (b<<10) | 0x8000; }
-INLINE u16 RGB565(u32 r,u32 g,u32 b) { return r | (g<<5) | (b<<11); }
+INLINE u16 RGB5A1(u32 r,u32 g,u32 b) { return (r<<10) | (g<<5) | b | 0x8000; }
+INLINE u16 RGB565(u32 r,u32 g,u32 b) { return (r<<11) | (g<<5) | b; }
+INLINE u16 BGR565(u32 r,u32 g,u32 b) { return r | (g<<5) | (b<<11); }
 INLINE u32 RGBA32(u32 r,u32 g,u32 b,u32 a) { return r | (g<<8) | (b<<16) | (a<<24); }
 
+typedef struct RGB888 { u8 r,g,b; } RGB888;
 typedef u16 RGB16;
 typedef u32 RGB32;
 

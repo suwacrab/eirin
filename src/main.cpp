@@ -24,12 +24,14 @@ SDL_Surface *window = NULL;
 uint8_t *keystate = NULL;
 bool quit = false;
 // asset vars
-void **img_bank = NULL;
+eirin **img_bank = NULL;
 GLuint gltex[0x10];
 // fumcs
 void init_sdl();
 void init_gl();
 void init_asset();
+
+void load_tex_rgb565(eirin *img,GLuint *tex);
 
 void update();
 void draw();
@@ -101,54 +103,40 @@ void init_gl()
 	gluPerspective( 60.0,ratio,1.0,1024.0 );
 }
 
+void load_tex_rgb565(eirin *img,GLuint tex)
+{
+	glBindTexture(GL_TEXTURE_2D,tex);
+	glTexImage2D(
+		GL_TEXTURE_2D,0, // target,level
+		GL_RGB,img->w,img->h, // internal fmt,size
+		0,GL_RGB,GL_UNSIGNED_SHORT_5_6_5, // border,pixel fmt,type
+		img->m // data
+	);
+
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST); // min
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST); // mag
+
+	printf("loaded texture %p! [size: %04X %04X]\n",img,img->w,img->h);
+}
+
 void init_asset()
 {
 	// allocating
-	img_bank = malloc(sizeof(void*)*0x10);
-	img_bank[0] = malloc(sizeof(RGB16)*(0x10*0x10));
+	img_bank = (eirin**)malloc(sizeof(eirin*)*0x10);
+	for(u32 img=0; img<0x10; img++)
+	{ img_bank[img] = (eirin*)malloc(sizeof(eirin)); }
 	// test image loadin
-	RGB16 *testimg = (RGB16*)img_bank[0];
-	for(u32 y=0; y<0x10; y++)
-	{
-		for(u32 x=0; x<0x10; x++)
-		{
-			u32 r = x<<4; // 255, if x==16.
-			u32 g = 0xFF; // 255.
-			u32 b = y<<4; // 255, if y == 16.
-			RGB16 clr = RGB565(r>>3,g>>3,b>>3);
-			testimg[x + (y*0x10)] = clr;
-		}
-	}
-
-	printf("%04X\n",testimg[0]);
+	eirin_loadimg(img_bank[0],"gfx/testtile.png",EIRIN_PIXELFMT_RGB565);
+	eirin_loadimg(img_bank[1],"gfx/testtex.ppm",EIRIN_PIXELFMT_RGB565);
+	
 	// GL image loading
 	glGenTextures(2,gltex);
-	glBindTexture(GL_TEXTURE_2D,gltex[0]); // set texture to 0
-	glTexImage2D(
-		GL_TEXTURE_2D,0, // target,level
-		GL_RGB,0x10,0x10, // internal fmt,size
-		0,GL_RGB,GL_UNSIGNED_SHORT_5_6_5, // border,pixel fmt,type
-		testimg // data
-	);
+	load_tex_rgb565(img_bank[0],gltex[0]);
+	load_tex_rgb565(img_bank[1],gltex[1]);	
 
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST); // min
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST); // mag
-	
-	// file image loadin
-	eirin loadimg; eirin_loadimg(
-		&loadimg,"gfx/player-proto.png",EIRIN_PIXELFMT_RGB565
-	);
-	
-	glBindTexture(GL_TEXTURE_2D,gltex[1]);
-	glTexImage2D(
-		GL_TEXTURE_2D,0, // target,level
-		GL_RGB5,loadimg.w,loadimg.h, // internal fmt,size
-		0,GL_RGB,GL_UNSIGNED_SHORT_5_6_5, // border,pixel fmt,type
-		loadimg.m // data
-	);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST); // min
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST); // mag
-	
+	// texture flipping
+	glMatrixMode(GL_TEXTURE);
+	glScalef(1,-1,1);
 }
 
 void update()
@@ -179,14 +167,14 @@ void draw()
 	
 	// quad drawin
 	//glColor4ubv(white);
-	glBindTexture(GL_TEXTURE_2D,gltex[1]);
 	for(u32 i=0; i<2; i++)
 	{
+		glBindTexture(GL_TEXTURE_2D,gltex[i]);
 		glBegin(GL_QUADS);
-			glTexCoord2f(0.0f,0.0f); glVertex3fv((GLfloat*)&quad[0]);
+			glTexCoord2f(0.5f,0.0f); glVertex3fv((GLfloat*)&quad[0]);
 			glTexCoord2f(1.0f,0.0f); glVertex3fv((GLfloat*)&quad[1]);
 			glTexCoord2f(1.0f,1.0f); glVertex3fv((GLfloat*)&quad[2]);
-			glTexCoord2f(0.0f,1.0f); glVertex3fv((GLfloat*)&quad[3]);
+			glTexCoord2f(0.5f,1.0f); glVertex3fv((GLfloat*)&quad[3]);
 		glEnd();
 		glRotatef(180.0f, 1.0f,0,0);
 	}
