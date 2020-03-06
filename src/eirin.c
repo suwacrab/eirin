@@ -45,7 +45,7 @@ eirin *eirin_init(eirin *yago,u32 w,u32 h,eirin_pixelfmt fmt)
 	return yago;
 }
 
-eirin *eirin_loadimg(eirin *yago,char *fname,eirin_pixelfmt fmt)
+eirin *eirin_loadimg(eirin *yago,const char *fname,eirin_pixelfmt fmt)
 {	
 	// vars n shit
 	SDL_Surface *loadimg = NULL; // loaded img

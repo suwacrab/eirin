@@ -38,7 +38,7 @@ typedef void eirin_initfunc(eirin*);
 
 /*	--	main functions	--	*/
 extern eirin *eirin_init(eirin *yago,u32 w,u32 h,eirin_pixelfmt fmt);
-eirin *eirin_loadimg(eirin *yago,char *fname,eirin_pixelfmt fmt);
+eirin *eirin_loadimg(eirin *yago,const char *fname,eirin_pixelfmt fmt);
 
 /*	--	init functions	--	*/
 extern eirin_initfunc *eirin_initmodes[5];

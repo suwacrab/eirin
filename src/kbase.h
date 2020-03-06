@@ -70,17 +70,18 @@ INLINE void str_lower(char *str,u32 len)
 { for(u32 i=0; i<len; i++) str[i] = tolower(str[i]); }
 
 /*	--	fixed-point types	--	*/
-typedef u32 FIXED;
-typedef s32 SFIXED;
+typedef s32 FIXED;
 
-INLINE u32 fix_mul(FIXED a,FIXED b,u32 dec)
-{ return (a*b)>>dec; }
-INLINE s32 sfix_mul(FIXED a,SFIXED b,u32 dec)
+#define inttofixed(n,s) ((n)<<(s))
+#define fixedtoint(n,s) ((n)>>(s))
+INLINE FIXED fix_mul(FIXED a,FIXED b,u32 dec)
+{ return (a>>(dec>>1)) * (b>>(dec>>1)); }
+INLINE FIXED fix_mul2(FIXED a,FIXED b,u32 dec)
 { return (a*b)>>dec; }
 
 /*	--	vector types	--	*/
-typedef struct { s32 x,y,z; } VEC3;
-typedef struct { s32 x,y; } VEC2;
+typedef struct { FIXED x,y,z; } VEC3;
+typedef struct { FIXED x,y; } VEC2;
 
 // -- setting
 INLINE void vec3_set(VEC3 *a,s32 x,s32 y,s32 z)
@@ -109,14 +110,14 @@ INLINE void vec2_mul(VEC2 *a,VEC2 *b)
 // -- multiplying (fixed point)
 INLINE void vec3_mulf(VEC3 *a,VEC3 *b,u32 dec)
 { 
-  a->x = sfix_mul(a->x,b->x,dec);
-  a->y = sfix_mul(a->y,b->y,dec);
-  a->z = sfix_mul(a->z,b->z,dec);
+  a->x = fix_mul(a->x,b->x,dec);
+  a->y = fix_mul(a->y,b->y,dec);
+  a->z = fix_mul(a->z,b->z,dec);
 }
 INLINE void vec2_mulf(VEC2 *a,VEC2 *b,u32 dec)
 {
-	a->x = sfix_mul(a->x,b->x,dec);
-	a->y = sfix_mul(a->y,b->y,dec);
+	a->x = fix_mul(a->x,b->x,dec);
+	a->y = fix_mul(a->y,b->y,dec);
 }
 
 // -- string conversion

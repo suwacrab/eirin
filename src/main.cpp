@@ -122,17 +122,17 @@ void load_tex_rgb565(eirin *img,GLuint tex)
 void init_asset()
 {
 	// allocating
-	img_bank = (eirin**)malloc(sizeof(eirin*)*0x10);
+	img_bank = new eirin*[0x10];
 	for(u32 img=0; img<0x10; img++)
-	{ img_bank[img] = (eirin*)malloc(sizeof(eirin)); }
+	{ img_bank[img] = new eirin[0x10]; }
 	// test image loadin
-	eirin_loadimg(img_bank[0],"gfx/testtile.png",EIRIN_PIXELFMT_RGB565);
+	eirin_loadimg(img_bank[0],"gfx/player-proto.png",EIRIN_PIXELFMT_RGB565);
 	eirin_loadimg(img_bank[1],"gfx/testtex.ppm",EIRIN_PIXELFMT_RGB565);
-	
+
 	// GL image loading
-	glGenTextures(2,gltex);
+	glGenTextures(0x10,gltex);
 	load_tex_rgb565(img_bank[0],gltex[0]);
-	load_tex_rgb565(img_bank[1],gltex[1]);	
+	load_tex_rgb565(img_bank[1],gltex[1]);
 
 	// texture flipping
 	glMatrixMode(GL_TEXTURE);
@@ -152,33 +152,44 @@ void draw()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-
+	
+	glPushMatrix();
+	{ // handle .12 fixed point
+		float zoom = 1.0f / inttofixed(1,12);
+		float zoffset = -8.0f;
+		glTranslatef(0,0,zoffset);
+		glScalef(zoom,zoom,zoom);
+	}
 	glPushMatrix();
 	// moving & rotating
 	float ftime = (float)frames;
-	float z = -3.0f;
-	glTranslatef(0,0,z );
-	glRotatef(ftime*.2,1.0f,0.0f,0.0f);
-	glRotatef(ftime,0.0f,0.0f,1.0f);
-	
+	FIXED angle = inttofixed(frames%360,12); // convert to .12 fixed
+	angle = fixedtoint( fix_mul(angle,0x1000,12),0 ); // multiply, convert to int again
+	printf("%08X\n",angle);
+	glRotatef(angle>>12,1.0f,0.0f,0.0f);
+	glRotatef(angle>>12,0.0f,0.0f,1.0f);
+
 	// quad vars
 	GLubyte white[4] = { 0xFF,0xFF,0xFF,0xFF };
 	GLubyte red[4] = { 0xFF,0x00,0x00,0xFF };
-	
+
 	// quad drawin
 	//glColor4ubv(white);
+	s32 zout = inttofixed(1,12);
+	glScalef(zout,zout,zout);
 	for(u32 i=0; i<2; i++)
 	{
 		glBindTexture(GL_TEXTURE_2D,gltex[i]);
 		glBegin(GL_QUADS);
-			glTexCoord2f(0.5f,0.0f); glVertex3fv((GLfloat*)&quad[0]);
+			glTexCoord2f(0.0f,0.0f); glVertex3fv((GLfloat*)&quad[0]);
 			glTexCoord2f(1.0f,0.0f); glVertex3fv((GLfloat*)&quad[1]);
 			glTexCoord2f(1.0f,1.0f); glVertex3fv((GLfloat*)&quad[2]);
-			glTexCoord2f(0.5f,1.0f); glVertex3fv((GLfloat*)&quad[3]);
+			glTexCoord2f(0.0f,1.0f); glVertex3fv((GLfloat*)&quad[3]);
 		glEnd();
 		glRotatef(180.0f, 1.0f,0,0);
 	}
-	
+
+	glPopMatrix();
 	glPopMatrix();
 	SDL_GL_SwapBuffers();
 }
@@ -189,3 +200,4 @@ void checkquit(bool *quitflag)
 	do_quit = keystate[SDLK_ESCAPE];
 	*quitflag = do_quit;
 }
+
