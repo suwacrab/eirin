@@ -5,6 +5,7 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#define FPSHIFT (12)
 #define WIDTH (320)
 #define HEIGHT (240)
 
@@ -155,7 +156,7 @@ void draw()
 	
 	glPushMatrix();
 	{ // handle .12 fixed point
-		float zoom = 1.0f / inttofixed(1,12);
+		float zoom = 2.0f / inttofixed(1,FPSHIFT);
 		float zoffset = -8.0f;
 		glTranslatef(0,0,zoffset);
 		glScalef(zoom,zoom,zoom);
@@ -163,11 +164,8 @@ void draw()
 	glPushMatrix();
 	// moving & rotating
 	float ftime = (float)frames;
-	FIXED angle = inttofixed(frames%360,12); // convert to .12 fixed
-	angle = fixedtoint( fix_mul(angle,0x1000,12),0 ); // multiply, convert to int again
-	printf("%08X\n",angle);
-	glRotatef(angle>>12,1.0f,0.0f,0.0f);
-	glRotatef(angle>>12,0.0f,0.0f,1.0f);
+	FIXED angle = frames;
+	glRotatef(angle,0.0f,0.0f,1.0f);
 
 	// quad vars
 	GLubyte white[4] = { 0xFF,0xFF,0xFF,0xFF };
@@ -175,7 +173,7 @@ void draw()
 
 	// quad drawin
 	//glColor4ubv(white);
-	s32 zout = inttofixed(1,12);
+	s32 zout = inttofixed(1,FPSHIFT);
 	glScalef(zout,zout,zout);
 	for(u32 i=0; i<2; i++)
 	{
